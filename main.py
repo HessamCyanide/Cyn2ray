@@ -4,6 +4,7 @@ import schedule
 import time
 import base64
 import os
+import re
 
 sources = [
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt",
@@ -13,9 +14,14 @@ sources = [
 def fetch_configs():
     configs = []
     v2ray_protocols = ["vmess://", "vless://", "trojan://", "ss://", "socks://", "http://"]
-    country_keywords = [
-        "united states", "usa", "us", "america", "🇺🇸", "ashburn", "dallas", "los angeles", "new york", "chicago", "washington", "miami", "phoenix", "atlanta", "seattle", "boston", "san jose", "houston", "denver", "las vegas", "charlotte", "detroit", "philadelphia", "portland", "minneapolis", "baltimore", "cleveland", "pittsburgh", "orlando", "cincinnati", "kansas city", "sacramento", "st louis", "salt lake city", "raleigh", "richmond", "columbus", "indianapolis", "austin", "san francisco", "germany", "de", "🇩🇪", "berlin", "frankfurt", "dusseldorf", "munich", "hamburg", "stuttgart", "finland", "fi", "🇫🇮", "helsinki", "espoo", "vantaa", "tampere", "oulu", "turku", "lahti", "kuopio", "jyvaskyla", "pori", "lappeenranta"
+    # فقط آمریکا، آلمان و فنلاند
+    country_patterns = [
+        r"\b(united ?states|usa|us|america|ashburn|dallas|los angeles|new york|chicago|washington|miami|phoenix|atlanta|seattle|boston|san jose|houston|denver|las vegas|charlotte|detroit|philadelphia|portland|minneapolis|baltimore|cleveland|pittsburgh|orlando|cincinnati|kansas city|sacramento|st louis|salt lake city|raleigh|richmond|columbus|indianapolis|austin|san francisco)\b",
+        r"\b(germany|de|berlin|frankfurt|dusseldorf|munich|hamburg|stuttgart)\b",
+        r"\b(finland|fi|helsinki|espoo|vantaa|tampere|oulu|turku|lahti|kuopio|jyvaskyla|pori|lappeenranta)\b",
+        r"🇺🇸", r"🇩🇪", r"🇫🇮"
     ]
+    country_regex = re.compile("|".join(country_patterns), re.IGNORECASE)
     for url in sources:
         try:
             response = requests.get(url, timeout=10)
@@ -23,9 +29,8 @@ def fetch_configs():
                 for line in response.text.splitlines():
                     line = line.strip()
                     if any(line.startswith(proto) for proto in v2ray_protocols):
-                        # تلاش برای یافتن کشور در متن کانفیگ
-                        line_lower = line.lower()
-                        if any(keyword in line_lower for keyword in country_keywords):
+                        # فقط کانفیگ‌های آمریکا، آلمان و فنلاند
+                        if country_regex.search(line):
                             configs.append(line)
         except Exception as e:
             print(f"❌ خطا در دریافت از {url}: {e}")
