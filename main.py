@@ -12,13 +12,21 @@ sources = [
 
 def fetch_configs():
     configs = []
+    v2ray_protocols = ["vmess://", "vless://", "trojan://", "ss://", "socks://", "http://"]
+    country_keywords = [
+        "united states", "usa", "us", "america", "🇺🇸", "ashburn", "dallas", "los angeles", "new york", "chicago", "washington", "miami", "phoenix", "atlanta", "seattle", "boston", "san jose", "houston", "denver", "las vegas", "charlotte", "detroit", "philadelphia", "portland", "minneapolis", "baltimore", "cleveland", "pittsburgh", "orlando", "cincinnati", "kansas city", "sacramento", "st louis", "salt lake city", "raleigh", "richmond", "columbus", "indianapolis", "austin", "san francisco", "germany", "de", "🇩🇪", "berlin", "frankfurt", "dusseldorf", "munich", "hamburg", "stuttgart", "finland", "fi", "🇫🇮", "helsinki", "espoo", "vantaa", "tampere", "oulu", "turku", "lahti", "kuopio", "jyvaskyla", "pori", "lappeenranta"
+    ]
     for url in sources:
         try:
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 for line in response.text.splitlines():
-                    if line.startswith("vmess://") or line.startswith("vless://") or line.startswith("trojan://"):
-                        configs.append(line.strip())
+                    line = line.strip()
+                    if any(line.startswith(proto) for proto in v2ray_protocols):
+                        # تلاش برای یافتن کشور در متن کانفیگ
+                        line_lower = line.lower()
+                        if any(keyword in line_lower for keyword in country_keywords):
+                            configs.append(line)
         except Exception as e:
             print(f"❌ خطا در دریافت از {url}: {e}")
     return configs
